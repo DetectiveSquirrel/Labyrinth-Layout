@@ -21,11 +21,15 @@ namespace Labyrinth_Layout
             LoadOnStart = true;
             OnlyLabyrinth = true;
             HotKey = Keys.Insert;
+            ManualToggle = Keys.Delete;
         }
 
 
         [Menu("(Re)Load Hotkey", 400)]
         public HotkeyNode HotKey { get; set; }
+
+        [Menu("Show/Hide Hotkey", 800)]
+        public HotkeyNode ManualToggle { get; set; }
 
         [Menu("Difficulty", 1)]
         public ListNode Difficulty { get; set; }
@@ -44,7 +48,7 @@ namespace Labyrinth_Layout
         [Menu("Size", 200)]
         public RangeNode<int> Size { get; set; }
 
-        [Menu("", 800)]
+        [Menu("", 34573)]
         public EmptyNode ccc { get; set; }
 
         [Menu("Automatic Changing", 700)]

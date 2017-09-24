@@ -28,6 +28,10 @@ namespace Labyrinth_Layout
         public bool Started = false;
         public bool InLabyrinth = false;
         public bool AutoSelectedDiff = false;
+        public bool FightingIzaro = false;
+        public bool ManualHide = false;
+        public bool isHideKeyDown = false;
+        public bool isReloadKeyDown = false;
         public string NewSelectedDiff;
 
         public override void Initialise()
@@ -70,6 +74,7 @@ namespace Labyrinth_Layout
 
         private void OnAreaChange(AreaController area)
         {
+            //File.WriteAllText(@"D:\Path of exile Tools\PoE HUD (NEW)\Release\plugins\Labyrinth-Layout\WriteLines.txt", area.CurrentArea.Name);
 
             if (InLabyrinth)
             {
@@ -99,8 +104,15 @@ namespace Labyrinth_Layout
                 }
             }
 
+            // reset every area just toi be safe
+            FightingIzaro = false;
+
+            // dont show in izaro room there is no need to hide hp bar.
             if (area.CurrentArea.Name == "Aspirants' Plaza")
                 InLabyrinth = true;
+
+            if (area.CurrentArea.Name == "Aspirant's Trial")
+                FightingIzaro = true;
 
             if (area.CurrentArea.IsTown || area.CurrentArea.IsHideout)
             {
@@ -112,10 +124,25 @@ namespace Labyrinth_Layout
         public override void Render()
         {
             base.Render();
-            if (Keyboard.IsKeyDown((int)Settings.HotKey.Value))
+            if (Keyboard.IsKeyDown((int)Settings.HotKey.Value) && !isReloadKeyDown)
             {
+                isReloadKeyDown = true;
                 Started = true;
                 ImageReady = false;
+            }
+            if (!Keyboard.IsKeyDown((int)Settings.HotKey.Value) && isReloadKeyDown)
+            {
+                isReloadKeyDown = false;
+            }
+            if (Keyboard.IsKeyDown((int)Settings.ManualToggle.Value) && !isHideKeyDown)
+            {
+                isHideKeyDown = true;
+                if (isHideKeyDown)
+                    ManualHide = !ManualHide;
+            }
+            if (!Keyboard.IsKeyDown((int)Settings.ManualToggle.Value) && isHideKeyDown)
+            {
+                isHideKeyDown = false;
             }
 
             if (ChangingImage)
@@ -139,14 +166,16 @@ namespace Labyrinth_Layout
                 {
                     if (Settings.OnlyLabyrinth)
                     {
-                        if (InLabyrinth && AutoSelectedDiff)
+                        if (InLabyrinth && AutoSelectedDiff && !FightingIzaro)
                         {
-                            DrawLayoutImage();
+                            if (!ManualHide)
+                                DrawLayoutImage();
                         }
                     }
                     else
                     {
-                        DrawLayoutImage();
+                        if (!ManualHide)
+                            DrawLayoutImage();
                     }
                 }
             }
