@@ -45,3 +45,10 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+Debug/
+Release/
+packages/
+config.ini
+Labyrinth_Layout.dll.config
+Labyrinth_Layout.pdb
