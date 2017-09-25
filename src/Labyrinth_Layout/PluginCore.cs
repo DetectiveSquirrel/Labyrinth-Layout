@@ -36,9 +36,9 @@ namespace Labyrinth_Layout
 
         public override void Initialise()
         {
+            FolderCheck();
             Settings.Difficulty.OnValueSelected += SetNewDifficulty;
             GameController.Area.OnAreaChange += OnAreaChange;
-
             List<string> diffs = new List<string>() { "Uber", "Merciless", "Cruel", "Normal" };
             Settings.Difficulty.SetListValues(diffs);
             poe_lab_diff = diffs[0];
@@ -46,11 +46,9 @@ namespace Labyrinth_Layout
             // display default league in setting
             if (Settings.Difficulty.Value == null)
                 Settings.Difficulty.Value = poe_lab_diff;
-
-
+            
             // set wanted league
             poe_lab_diff = Settings.Difficulty.Value.ToLower();
-
             if (Settings.LoadOnStart)
                 Started = true;
         }
@@ -74,11 +72,8 @@ namespace Labyrinth_Layout
 
         private void OnAreaChange(AreaController area)
         {
-            //File.WriteAllText(@"D:\Path of exile Tools\PoE HUD (NEW)\Release\plugins\Labyrinth-Layout\WriteLines.txt", area.CurrentArea.Name);
-
             if (InLabyrinth)
             {
-
                 switch (area.CurrentArea.RealLevel)
                 {
                     case 33:
@@ -94,7 +89,6 @@ namespace Labyrinth_Layout
                         poe_lab_diff = "uber";
                         break;
                 }
-
                 if (!AutoSelectedDiff && Settings.OnlyLabyrinth)
                 {
                     AutoSelectedDiff = true;
@@ -103,10 +97,8 @@ namespace Labyrinth_Layout
                         Started = true;
                 }
             }
-
-            // reset every area just toi be safe
+            // reset every area just to be safe
             FightingIzaro = false;
-
             // dont show in izaro room there is no need to hide hp bar.
             if (area.CurrentArea.Name == "Aspirants' Plaza")
                 InLabyrinth = true;
@@ -121,9 +113,58 @@ namespace Labyrinth_Layout
             }
         }
 
+        public void FolderCheck()
+        {
+            var _folder = PluginDirectory + "\\images";
+
+            if (!Directory.Exists(_folder))
+            {
+                Directory.CreateDirectory(_folder);
+            }
+        }
+
         public override void Render()
         {
             base.Render();
+            KeyChecker();
+
+            if (ChangingImage)
+            {
+                poe_lab_diff = NewSelectedDiff.ToLower();
+                ImageReady = false;
+                ChangingImage = false;
+            }
+            if (Started)
+            {
+                if (!ImageReady)
+                {
+                    DeleteOldImages();
+
+                    GetRightPage();
+                    SaveImage();
+                    ImageReady = true;
+                }
+                else
+                {
+                    if (Settings.OnlyLabyrinth)
+                    {
+                        if (InLabyrinth && AutoSelectedDiff && !FightingIzaro)
+                        {
+                            if (!ManualHide)
+                                DrawFinalImage();
+                        }
+                    }
+                    else
+                    {
+                        if (!ManualHide)
+                            DrawFinalImage();
+                    }
+                }
+            }
+        }
+
+        private void KeyChecker()
+        {
             if (Keyboard.IsKeyDown((int)Settings.HotKey.Value) && !isReloadKeyDown)
             {
                 isReloadKeyDown = true;
@@ -144,44 +185,9 @@ namespace Labyrinth_Layout
             {
                 isHideKeyDown = false;
             }
-
-            if (ChangingImage)
-            {
-                poe_lab_diff = NewSelectedDiff.ToLower();
-                ImageReady = false;
-                ChangingImage = false;
-            }
-
-            if (Started)
-            {
-                if (!ImageReady)
-                {
-                    ClearImages();
-
-                    GetRightPage();
-                    SaveImage();
-                    ImageReady = true;
-                }
-                else
-                {
-                    if (Settings.OnlyLabyrinth)
-                    {
-                        if (InLabyrinth && AutoSelectedDiff && !FightingIzaro)
-                        {
-                            if (!ManualHide)
-                                DrawLayoutImage();
-                        }
-                    }
-                    else
-                    {
-                        if (!ManualHide)
-                            DrawLayoutImage();
-                    }
-                }
-            }
         }
 
-        private void ClearImages()
+        private void DeleteOldImages()
         {
             string[] dirs = Directory.GetFiles(PluginDirectory + $"\\images\\");
             foreach (string dir in dirs)
@@ -190,14 +196,15 @@ namespace Labyrinth_Layout
             }
         }
 
-        private void DrawLayoutImage()
+        private void DrawFinalImage()
         {
             double PercentChange = Settings.Size / (double)100;
             int Width = ChangeByPercent(PercentChange, 841);
             int Height = ChangeByPercent(PercentChange, 270);
             float X = Settings.X - (Width / 2);
             float Y = Settings.Y;
-            Graphics.DrawPluginImage(PluginDirectory + $"\\images\\{CurrentFileName}.png", new SharpDX.RectangleF(X, Y, Width, Height));
+            string CurrentImageFile = PluginDirectory + $"\\images\\{CurrentFileName}.png";
+            Graphics.DrawPluginImage(CurrentImageFile, new SharpDX.RectangleF(X, Y, Width, Height));
         }
 
         private int ChangeByPercent(double percent, double number)
@@ -214,7 +221,7 @@ namespace Labyrinth_Layout
             colormatrix.Matrix33 = opacityvalue;
             ImageAttributes imgAttribute = new ImageAttributes();
             imgAttribute.SetColorMatrix(colormatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
-            graphics.DrawImage(img, new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, imgAttribute);
+            graphics.DrawImage(img, new Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, imgAttribute);
             graphics.Dispose();   // Releasing all resource used by graphics
             return bmp;
         }
@@ -314,6 +321,8 @@ namespace Labyrinth_Layout
             return result.ToString();
         }
     }
+
+    #region Link Class
     public struct LinkItem
     {
         public string Href;
@@ -398,7 +407,8 @@ namespace Labyrinth_Layout
             return list;
         }
     }
-
+    #endregion
+    #region Keyboard Class
     public static class Keyboard
     {
         [DllImport("user32.dll")]
@@ -436,5 +446,6 @@ namespace Labyrinth_Layout
             return GetKeyState(nVirtKey) < 0;
 
         }
-    }
+    } 
+    #endregion
 }

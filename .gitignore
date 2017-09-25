@@ -52,3 +52,5 @@ packages/
 config.ini
 Labyrinth_Layout.dll.config
 Labyrinth_Layout.pdb
+images/
+ErrorLog.txt
